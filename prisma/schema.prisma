@@ -14,6 +14,7 @@ model User {
   email    String @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  purchases Purchase[]
 }
 
 model Product {
@@ -23,5 +24,32 @@ model Product {
   stock     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  purchases PurchaseItem[]
 }
 
+model Purchase {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  totalPrice    Float
+  paymentMethod PaymentMethod
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id])
+  items         PurchaseItem[]
+}
+
+model PurchaseItem {
+  id         Int      @id @default(autoincrement())
+  purchaseId Int
+  productId  Int
+  quantity   Int
+  price      Float
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id])
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+}
