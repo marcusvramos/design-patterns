@@ -1,20 +1,12 @@
 import { Request, Response } from "express";
 import { UserModel } from "../model/user-model";
-import { Subject } from "../observer/observer";
-import { LogService } from "../services/log-service";
-import { EmailService } from "../services/email-service";
 import { User } from "@prisma/client";
 
 export class UserController {
   private userModel: UserModel;
 
   constructor() {
-    const userSubject = new Subject();
-
-    userSubject.addObserver(new LogService());
-    userSubject.addObserver(new EmailService());
-
-    this.userModel = new UserModel(userSubject);
+    this.userModel = new UserModel();
   }
 
   createUser = async (req: Request, res: Response): Promise<void> => {

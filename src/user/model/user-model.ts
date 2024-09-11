@@ -1,13 +1,10 @@
 import { PrismaClient, User } from '@prisma/client';
-import { Subject } from '../observer/observer';
 
 export class UserModel {
   private prisma: PrismaClient;
-  private userSubject: Subject;
 
-  constructor(userSubject: Subject) {
+  constructor() {
     this.prisma = new PrismaClient();
-    this.userSubject = userSubject;
   }
 
   async createUser(user: User) {
@@ -15,8 +12,6 @@ export class UserModel {
       const newUser = await this.prisma.user.create({
         data: { ...user },
       });
-
-      this.userSubject.notify('userCreated', newUser);
 
       return newUser;
     } catch (error) {
