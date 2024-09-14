@@ -13,8 +13,8 @@ export class UserController {
     const { name, document, email } = req.body;
 
     try {
-      if (!name || !document) {
-        res.status(400).json({ error: "Name and Document are required" });
+      if (!name || !document || !email) {
+        res.status(400).json({ error: "Name, Document and Email are required" });
         return;
       }
 

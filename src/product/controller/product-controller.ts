@@ -1,12 +1,16 @@
 import { Request, Response } from "express";
 import { Product } from "../entities/product";
 import { ProductModel } from "../model/product-model";
+import { EmailObserver } from "../../observers/email-observer";
 
 export class ProductController {
   private productModel: ProductModel;
 
   constructor() {
     this.productModel = new ProductModel();
+
+    const emailObserver = new EmailObserver();
+    this.productModel.addObserver(emailObserver);
   }
 
   createProduct = async (req: Request, res: Response): Promise<void> => {
@@ -17,7 +21,7 @@ export class ProductController {
         throw new Error("Missing parameters to create product");
       }
 
-      const newProduct = await this.productModel.createUser({
+      const newProduct = await this.productModel.createProduct({
         name,
         price,
         stock,
