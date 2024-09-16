@@ -43,6 +43,7 @@ export class PurchaseModel {
 
   async createPurchase(purchase: Purchase): Promise<Purchase> {
     try {
+      console.log('purchase:', purchase);
       const newPurchase = await this.prisma.purchase.create({
         data: {
           ...purchase,
@@ -61,7 +62,7 @@ export class PurchaseModel {
 
       return newPurchase;
     } catch (error) {
-      throw new Error('Failed to create purchase');
+      throw new Error(`Failed to create purchase ${error}`);
     }
   }
 

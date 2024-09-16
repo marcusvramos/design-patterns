@@ -2,14 +2,18 @@ import { PrismaClient } from '@prisma/client';
 import { Product } from '../entities/product';
 import { Subject } from '../../observers/subject';
 import { Observer } from '../../observers/observer';
+import { User } from '../../user/entities/user';
+import { PurchaseModel } from '../../purchase/model/purchase-model';
 
 
 export class ProductModel implements Subject {
   private prisma: PrismaClient;
+  private purchaseModel: PurchaseModel;
   private observers: Observer[] = [];
 
   constructor() {
     this.prisma = new PrismaClient();
+    this.purchaseModel = new PurchaseModel();
   }
 
   addObserver(observer: Observer): void {
@@ -20,10 +24,14 @@ export class ProductModel implements Subject {
     this.observers = this.observers.filter(obs => obs !== observer);
   }
 
-  notifyObservers(productId: number, message: string): void {
-    for (const observer of this.observers) {
-      observer.update(productId, message);
-    }
+  async notifyObservers(productId: number, message: string): Promise<void> {
+    const notifyPromises = this.observers.map(observer =>
+      observer.update(productId, message).catch(error => {
+        console.error(`Erro ao notificar observador: ${error}`);
+      })
+    );
+
+    await Promise.all(notifyPromises);
   }
 
   async createProduct(product: Product): Promise<Product> {
@@ -46,7 +54,16 @@ export class ProductModel implements Subject {
       });
 
       if (product) {
-        this.notifyObservers(productId, `O produto ${product.name} foi reabastecido!`);
+        const purchases = await this.purchaseModel.getPurchasesByProductId(productId);
+
+        const usersToNotify = new Set(purchases.map(purchase => purchase.purchase.user));
+
+        usersToNotify.forEach(user => {
+          const observerUser = new User(user.name, user.document, user.email);
+          this.addObserver(observerUser);
+        });
+
+        await this.notifyObservers(productId, `O produto ${product.name} foi reabastecido!`);
       }
     } catch (error) {
       throw new Error('Failed to update product stock');

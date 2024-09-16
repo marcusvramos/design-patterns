@@ -1,16 +1,12 @@
 import { Request, Response } from "express";
 import { Product } from "../entities/product";
 import { ProductModel } from "../model/product-model";
-import { EmailObserver } from "../../observers/email-observer";
 
 export class ProductController {
   private productModel: ProductModel;
 
   constructor() {
     this.productModel = new ProductModel();
-
-    const emailObserver = new EmailObserver();
-    this.productModel.addObserver(emailObserver);
   }
 
   createProduct = async (req: Request, res: Response): Promise<void> => {
@@ -40,4 +36,19 @@ export class ProductController {
       res.status(500).json({ error: error });
     }
   };
+
+  updateStock = async (req: Request, res: Response): Promise<void> => {
+    const { productId, quantity } = req.body as { productId: number; quantity: number };
+
+    try {
+      if (!productId || !quantity) {
+        throw new Error("Missing parameters to update stock");
+      }
+
+      await this.productModel.updateStock(productId, quantity);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: error });
+    }
+  }
 }

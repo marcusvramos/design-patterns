@@ -23,7 +23,7 @@ export class PurchaseController {
       if (validationError) {
         return res.status(400).json({ error: validationError });
       }
-
+      
       const { totalPrice, updatedItems, validationError: itemError } = await this.processItems(items);
       if (itemError) {
         return res.status(400).json({ error: itemError });
@@ -35,12 +35,10 @@ export class PurchaseController {
         paymentMethod: paymentMethod as PaymentMethod,
         items: updatedItems,
       } as Purchase);
-
       await this.updateProductStocks(items);
 
       return res.status(201).json(newPurchase);
     } catch (error) {
-      console.error('Error creating purchase:', error);
       return res.status(500).json({ error: 'Failed to create purchase', details: error });
     }
   };

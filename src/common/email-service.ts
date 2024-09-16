@@ -19,9 +19,9 @@ export class EmailService {
     const mailOptions = {
       from: '"Engenharia 3" <noreplay@engenharia.com>',
       to: data.email,
-      subject: "Bem-vindo ao nosso serviço!",
-      text: `Olá, ${data.name}! Bem-vindo ao nosso serviço!`,
-      html: `<p>Olá, <b>${data.name}</b>! Bem-vindo ao nosso serviço!</p>`,
+      subject: `Atualização de Estoque - Produto ${data.productId}`,
+      text: `Olá, ${data.name}! Tenho boas notícias! ${data.message}`,
+      html: `<p>Olá, <b>${data.name}</b>! Tenho boas notícias sobre o produto <b>${data.productId}</b>!<br/>${data.message}</p>`,
     };
 
     try {
