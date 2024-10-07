@@ -15,8 +15,6 @@ model User {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   purchases       Purchase[]
-  createdAccounts Accounts[] @relation("CreatedByRelation")
-  closedAccounts  Accounts[] @relation("ClosedByRelation")
 }
 
 model Product {
@@ -50,19 +48,10 @@ model PurchaseItem {
   product    Product  @relation(fields: [productId], references: [id])
 }
 
-model Accounts {
+model BankAccount {
   id           Int           @id @default(autoincrement())
-  descriptions String
-  value        Float
-  institution  String
-  createdById  Int
-  closedById   Int?
-  type         AccountType
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  status       AccountStatus
-  createdBy    User          @relation("CreatedByRelation", fields: [createdById], references: [id])
-  closedBy     User?         @relation("ClosedByRelation", fields: [closedById], references: [id])
+  name         String
+  balance      Float
 }
 
 enum AccountStatus {
@@ -78,9 +67,4 @@ enum PaymentMethod {
   PIX
   CASH
   BILLET
-}
-
-enum AccountType {
-  CREDIT
-  DEBIT
 }

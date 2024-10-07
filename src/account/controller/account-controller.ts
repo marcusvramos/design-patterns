@@ -1,21 +1,20 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 
 export abstract class AccountController { 
-  public settleAccount(res: Response): Response {
-    this.validateAccount(); 
-    this.processPayment();   
-    this.sendConfirmation();
-
-    return res.status(200).send("Conta paga/recebida com sucesso.");
+  public async settleAccount(req: Request, res: Response): Promise<Response> {
+    try {
+      this.validateAccount(req);    
+      await this.processPayment(req);
+      return this.sendConfirmation(res);
+    }
+    catch(error){
+      return res.status(400).send(error);
+    }
   }
 
-  protected validateAccount(): void {
-    console.log("Conta validada.");
-  }
+  abstract validateAccount(req: Request): void;
 
-  protected abstract processPayment(): void;
+  abstract processPayment(req: Request): Promise<void>;
 
-  protected sendConfirmation(): void {
-    console.log("Confirmação enviada.");
-  }
+  abstract sendConfirmation(res: Response): Response; 
 }

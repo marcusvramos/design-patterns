@@ -1,15 +1,43 @@
-import { AccountStatus, AccountType } from "@prisma/client";
-import { User } from "../../user/entities/user";
+import { PrismaClient } from "@prisma/client";
 
 export class Account {
-  protected readonly id?: number;
-  protected readonly descriptions!: string;
-  protected readonly value!: number;
-  protected readonly institution!: string;
-  protected readonly createdBy!: User;
-  protected readonly createdAt!: Date;
-  protected readonly updatedAt!: Date;
-  protected readonly status!: AccountStatus;
-  protected readonly type!: AccountType;
-  protected readonly closedBy?: User;
+  private readonly prisma: PrismaClient;
+  public constructor(
+    private readonly id: number,
+    private readonly name: string,
+    private readonly balance: number
+  ) {
+    this.prisma = new PrismaClient();
+  }
+
+  public static async getAccount(name: string): Promise<Account | null> {
+    const prisma = new PrismaClient();
+    const result = await prisma.bankAccount.findFirst({
+      where: { name }
+    })
+    if (!result) return null;
+    return new Account(result?.id, result?.name, result?.balance);
+  }
+
+  public validateBalance(amount: number): boolean {
+    return this.balance > amount;
+  }
+
+  public async increaseBalance(amount: number) {
+    return this.prisma.bankAccount.update({
+      where: { id: this.id },
+      data: {
+        balance: this.balance + amount
+      }
+    })
+  }
+
+  public async decreaseBalance(amount: number) {
+    return this.prisma.bankAccount.update({
+      where: { id: this.id },
+      data: {
+        balance: this.balance - amount
+      }
+    })
+  }
 }
