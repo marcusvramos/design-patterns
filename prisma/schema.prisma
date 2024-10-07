@@ -8,27 +8,29 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  document String @unique
-  email    String @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  purchases Purchase[]
+  id              Int        @id @default(autoincrement())
+  name            String
+  document        String     @unique
+  email           String     @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  purchases       Purchase[]
+  createdAccounts Accounts[] @relation("CreatedByRelation")
+  closedAccounts  Accounts[] @relation("ClosedByRelation")
 }
 
 model Product {
-  id        Int      @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   name      String
   price     Float
   stock     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
   purchases PurchaseItem[]
 }
 
 model Purchase {
-  id            Int           @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   userId        Int
   totalPrice    Float
   paymentMethod PaymentMethod
@@ -48,10 +50,37 @@ model PurchaseItem {
   product    Product  @relation(fields: [productId], references: [id])
 }
 
+model Accounts {
+  id           Int           @id @default(autoincrement())
+  descriptions String
+  value        Float
+  institution  String
+  createdById  Int
+  closedById   Int?
+  type         AccountType
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  status       AccountStatus
+  createdBy    User          @relation("CreatedByRelation", fields: [createdById], references: [id])
+  closedBy     User?         @relation("ClosedByRelation", fields: [closedById], references: [id])
+}
+
+enum AccountStatus {
+  OPEN
+  CLOSED
+  CANCELED
+  FAILED
+}
+
 enum PaymentMethod {
   CREDIT_CARD
   DEBIT_CARD
   PIX
   CASH
   BILLET
+}
+
+enum AccountType {
+  CREDIT
+  DEBIT
 }
