@@ -6,8 +6,8 @@ const router = Router();
 const accountReceivable = new AccountReceivableController();
 const accountToPay = new AccountToPayController();
 
-router.post('/pagar', (req, res) => accountToPay.settleAccount(res));
-router.post('/receber', (req, res) => accountReceivable.settleAccount(res));
+router.post('/pagar', (req, res) => accountToPay.settleAccount(req, res));
+router.post('/receber', (req, res) => accountReceivable.settleAccount(req, res));
 
 
 
