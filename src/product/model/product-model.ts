@@ -59,7 +59,7 @@ export class ProductModel implements Subject {
         const usersToNotify = new Set(purchases.map(purchase => purchase.purchase.user));
 
         usersToNotify.forEach(user => {
-          const observerUser = new User(user.name, user.document, user.email);
+          const observerUser = new User(user.id, user.name, user.document, user.email);
           this.addObserver(observerUser);
         });
 

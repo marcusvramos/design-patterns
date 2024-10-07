@@ -3,6 +3,8 @@ import { Observer } from "../../observers/observer";
 
 
 export class User implements Observer {
+  public readonly id: number;
+
   public readonly name: string;
   
   public readonly document: string;
@@ -11,7 +13,8 @@ export class User implements Observer {
   
   private emailService: EmailService;
 
-  constructor(name: string, document: string, email: string) {
+  constructor(id: number, name: string, document: string, email: string) {
+    this.id = id;
     this.name = name;
     this.document = document;
     this.email = email;
