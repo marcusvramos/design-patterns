@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import { Account } from "../entities/account";
-import { AccountReceivableController } from "./account-receivable-controller";
-import { AccountToPayController } from "./account-to-pay-controller";
 
 export abstract class AccountController { 
   protected bankAccount: Account | undefined;
   protected enterpriseAccount: Account | undefined;
+  protected type?: "receivable" | "toPay";
 
   public async settleAccount(req: Request, res: Response): Promise<Response> {
     try {
+      await this.initializeAccounts();
       const isValid = this.validateAccount(req); 
       if(!isValid){
         return res.status(400).send("Insuficient balance")
@@ -37,11 +37,11 @@ export abstract class AccountController {
 
   protected validateAccount(req: Request): boolean{
     const amount = req.body.amount;
-    if(this instanceof AccountReceivableController){
+    if(this.type === "receivable"){
       return !!this.bankAccount?.validateBalance(amount);
     }
 
-    if(this instanceof AccountToPayController){
+    if(this.type === "toPay"){
       return !!this.enterpriseAccount?.validateBalance(amount);
     }
 

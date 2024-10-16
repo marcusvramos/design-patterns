@@ -1,14 +1,11 @@
-import { Account } from "../entities/account";
 import { AccountController } from "./account-controller";
 import { Request, Response } from "express";
 
 export class AccountReceivableController extends AccountController {
-  public constructor() {
+  constructor() {
     super();
-    this.initializeAccounts()
+    this.type = "receivable";
   }
-
-
 
   public async processPayment(req: Request): Promise<void> {
     const amount = req.body.amount;
