@@ -3,9 +3,16 @@ import { Request, Response } from 'express';
 import { Purchase } from '../entities/purchase';
 import { PurchaseModel } from '../model/purchase-model';
 import { PaymentMethod } from '@prisma/client';
+import { PaymentStrategy } from '../strategy/interface/payment-interface';
+import { CreditCardPayment } from '../strategy/concrete/credit-card-concrete';
+import { DebitCardPayment } from '../strategy/concrete/debit-card-concrete';
+import { PixPayment } from '../strategy/concrete/pix-concrete';
+import { CashPayment } from '../strategy/concrete/cash-concrete';
+import { BilletPayment } from '../strategy/concrete/billet-concrete';
 
 export class PurchaseController {
   private purchaseModel: PurchaseModel;
+  private paymentStrategy!: PaymentStrategy;
 
   constructor() {
     this.purchaseModel = new PurchaseModel();
@@ -19,15 +26,43 @@ export class PurchaseController {
     };
 
     try {
-      const validationError = await this.validatePurchaseInput(userId, paymentMethod, items);
+      const validationError = await this.validatePurchaseInput(
+        userId,
+        paymentMethod,
+        items
+      );
       if (validationError) {
         return res.status(400).json({ error: validationError });
       }
-      
-      const { totalPrice, updatedItems, validationError: itemError } = await this.processItems(items);
+
+      const {
+        totalPrice,
+        updatedItems,
+        validationError: itemError,
+      } = await this.processItems(items);
       if (itemError) {
         return res.status(400).json({ error: itemError });
       }
+
+      switch (paymentMethod) {
+        case PaymentMethod.CREDIT_CARD:
+          this.paymentStrategy = new CreditCardPayment();
+          break;
+        case PaymentMethod.DEBIT_CARD:
+          this.paymentStrategy = new DebitCardPayment();
+          break;
+        case PaymentMethod.PIX:
+          this.paymentStrategy = new PixPayment();
+          break;
+        case PaymentMethod.CASH:
+          this.paymentStrategy = new CashPayment();
+          break;
+        case PaymentMethod.BILLET:
+          this.paymentStrategy = new BilletPayment();
+          break;
+      }
+
+      await this.paymentStrategy.processPayment(totalPrice);
 
       const newPurchase = await this.purchaseModel.createPurchase({
         userId,
@@ -39,7 +74,9 @@ export class PurchaseController {
 
       return res.status(201).json(newPurchase);
     } catch (error) {
-      return res.status(500).json({ error: 'Failed to create purchase', details: error });
+      return res
+        .status(500)
+        .json({ error: 'Failed to create purchase', details: error });
     }
   };
 
@@ -49,11 +86,17 @@ export class PurchaseController {
       return res.status(200).json(purchases);
     } catch (error) {
       console.error('Error fetching purchases:', error);
-      return res.status(500).json({ error: 'Failed to get purchases', details: error });
+      return res
+        .status(500)
+        .json({ error: 'Failed to get purchases', details: error });
     }
   };
 
-  private async validatePurchaseInput(userId: number, paymentMethod: string, items: { productId: number; quantity: number }[]): Promise<string | null> {
+  private async validatePurchaseInput(
+    userId: number,
+    paymentMethod: string,
+    items: { productId: number; quantity: number }[]
+  ): Promise<string | null> {
     if (!userId || !paymentMethod || !items || items.length === 0) {
       return 'Missing parameters to create purchase';
     }
@@ -63,7 +106,9 @@ export class PurchaseController {
       return 'User not found';
     }
 
-    const isValidPaymentMethod = await this.purchaseModel.validatePaymentMethod(paymentMethod);
+    const isValidPaymentMethod = await this.purchaseModel.validatePaymentMethod(
+      paymentMethod
+    );
     if (!isValidPaymentMethod) {
       return 'Invalid payment method';
     }
@@ -71,7 +116,13 @@ export class PurchaseController {
     return null;
   }
 
-  private async processItems(items: { productId: number; quantity: number }[]): Promise<{ totalPrice: number; updatedItems: any[]; validationError?: string }> {
+  private async processItems(
+    items: { productId: number; quantity: number }[]
+  ): Promise<{
+    totalPrice: number;
+    updatedItems: any[];
+    validationError?: string;
+  }> {
     let totalPrice = 0;
     const updatedItems = [];
 
@@ -79,15 +130,27 @@ export class PurchaseController {
       const product = await this.purchaseModel.getProductById(item.productId);
 
       if (!product) {
-        return { totalPrice: 0, updatedItems: [], validationError: `Product with id ${item.productId} not found` };
+        return {
+          totalPrice: 0,
+          updatedItems: [],
+          validationError: `Product with id ${item.productId} not found`,
+        };
       }
 
       if (product.stock < item.quantity) {
-        return { totalPrice: 0, updatedItems: [], validationError: `Insufficient stock for product ${product.name}` };
+        return {
+          totalPrice: 0,
+          updatedItems: [],
+          validationError: `Insufficient stock for product ${product.name}`,
+        };
       }
 
       if (item.quantity <= 0) {
-        return { totalPrice: 0, updatedItems: [], validationError: `Invalid quantity for product ${product.name}` };
+        return {
+          totalPrice: 0,
+          updatedItems: [],
+          validationError: `Invalid quantity for product ${product.name}`,
+        };
       }
 
       const itemTotalPrice = product.price * item.quantity;
@@ -96,15 +159,24 @@ export class PurchaseController {
     }
 
     if (totalPrice <= 0) {
-      return { totalPrice: 0, updatedItems: [], validationError: 'Invalid total price' };
+      return {
+        totalPrice: 0,
+        updatedItems: [],
+        validationError: 'Invalid total price',
+      };
     }
 
     return { totalPrice, updatedItems };
   }
 
-  private async updateProductStocks(items: { productId: number; quantity: number }[]) {
+  private async updateProductStocks(
+    items: { productId: number; quantity: number }[]
+  ) {
     for (const item of items) {
-      await this.purchaseModel.updateProductStock(item.productId, item.quantity);
+      await this.purchaseModel.updateProductStock(
+        item.productId,
+        item.quantity
+      );
     }
   }
 }

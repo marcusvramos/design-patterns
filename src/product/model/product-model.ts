@@ -61,7 +61,7 @@ export class ProductModel implements Subject {
         usersToNotify.forEach(userId => {
           const user = purchases.find(purchase => purchase.purchase.user.id === userId)?.purchase.user;
           if (user) {
-            const observerUser = new User(user.name, user.document, user.email);
+            const observerUser = new User(user.id, user.name, user.document, user.email);
             this.addObserver(observerUser);
           }
         });
