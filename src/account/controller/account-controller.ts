@@ -22,13 +22,13 @@ export abstract class AccountController {
   }
 
   protected async initializeAccounts(): Promise<void> {
-    const [enterpriseAccount, bankAccount] = await Promise.all([
+    let [enterpriseAccount, bankAccount] = await Promise.all([
       Account.getAccount("empresa"),
       Account.getAccount("banco")
     ]);
   
     if (!enterpriseAccount || !bankAccount) {
-      throw new Error("Banco de dados incompleto!");
+      [enterpriseAccount, bankAccount] = await Account.createDefaultAccounts();
     }
 
     this.enterpriseAccount = enterpriseAccount;
