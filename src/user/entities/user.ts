@@ -18,15 +18,16 @@ export class User implements Observer {
     this.emailService = new EmailService();
   }
 
-  async update(productId: number, message: string): Promise<void> {
+  async update(product: string, message: string): Promise<void> {
     try {
       await this.emailService.send({
         email: this.email,
         name: this.name,
-        subject: `Notificação de Produto ${productId}`,
+        subject: `Notificação de Produto ${product}`,
         message: message,
+        product: product,
       });
-      console.log(`Notificação enviada para ${this.name} sobre o produto ${productId}`);
+      console.log(`Notificação enviada para ${this.name} sobre o produto ${product}`);
     } catch (error) {
       console.error(`Erro ao enviar notificação para ${this.name}:`, error);
     }

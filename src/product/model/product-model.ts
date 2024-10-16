@@ -24,9 +24,9 @@ export class ProductModel implements Subject {
     this.observers = this.observers.filter(obs => obs !== observer);
   }
 
-  async notifyObservers(productId: number, message: string): Promise<void> {
+  async notifyObservers(product: string, message: string): Promise<void> {
     const notifyPromises = this.observers.map(observer =>
-      observer.update(productId, message).catch(error => {
+      observer.update(product, message).catch(error => {
         console.error(`Erro ao notificar observador: ${error}`);
       })
     );
@@ -52,18 +52,21 @@ export class ProductModel implements Subject {
         where: { id: productId },
         data: { stock: { increment: quantity } },
       });
-
+      
       if (product) {
         const purchases = await this.purchaseModel.getPurchasesByProductId(productId);
-
-        const usersToNotify = new Set(purchases.map(purchase => purchase.purchase.user));
-
-        usersToNotify.forEach(user => {
-          const observerUser = new User(user.name, user.document, user.email);
-          this.addObserver(observerUser);
+      
+        const usersToNotify = new Set(purchases.map(purchase => purchase.purchase.user.id));
+      
+        usersToNotify.forEach(userId => {
+          const user = purchases.find(purchase => purchase.purchase.user.id === userId)?.purchase.user;
+          if (user) {
+            const observerUser = new User(user.name, user.document, user.email);
+            this.addObserver(observerUser);
+          }
         });
-
-        await this.notifyObservers(productId, `O produto ${product.name} foi reabastecido!`);
+      
+        await this.notifyObservers(product.name, `O produto ${product.name} foi reabastecido!`);
       }
     } catch (error) {
       throw new Error('Failed to update product stock');

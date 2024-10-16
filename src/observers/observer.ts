@@ -1,3 +1,3 @@
 export interface Observer {
-  update(productId: number, message: string): Promise<void>;
+  update(product: string, message: string): Promise<void>;
 }
