@@ -1,4 +1,4 @@
-# 📄 Changelog - Design Patterns
+# 📄 Design Patterns
 
 ### 🌟 Implementações
 
